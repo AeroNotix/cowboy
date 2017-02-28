@@ -460,17 +460,17 @@ resume(State, Env, Tail, Module, Function, Args) ->
 	end.
 
 -spec next_request(cowboy_req:req(), #state{}, any()) -> ok.
-next_request(Req, State=#state{req_keepalive=Keepalive, timeout=Timeout},
+next_request(Req0, State=#state{req_keepalive=Keepalive, timeout=Timeout},
 		HandlerRes) ->
-	cowboy_req:ensure_response(Req, 204),
+	{ok, Req1} = cowboy_req:ensure_response(Req0, 204),
 	%% If we are going to close the connection,
 	%% we do not want to attempt to skip the body.
-	case cowboy_req:get(connection, Req) of
+	case cowboy_req:get(connection, Req1) of
 		close ->
 			terminate(State);
 		_ ->
 			%% Skip the body if it is reasonably sized. Close otherwise.
-			Buffer = case cowboy_req:body(Req) of
+			Buffer = case cowboy_req:body(Req1) of
 				{ok, _, Req2} -> cowboy_req:get(buffer, Req2);
 				_ -> close
 			end,

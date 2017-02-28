@@ -403,8 +403,9 @@ request_init(FakeSocket, Peer, OnRequest, OnResponse,
 
 -spec execute(cowboy_req:req(), cowboy_middleware:env(), [module()])
 	-> ok.
-execute(Req, _, []) ->
-	cowboy_req:ensure_response(Req, 204);
+execute(Req0, _, []) ->
+	{ok, Req1} = cowboy_req:ensure_response(Req0, 204),
+    Req1;
 execute(Req, Env, [Middleware|Tail]) ->
 	case Middleware:execute(Req, Env) of
 		{ok, Req2, Env2} ->
@@ -413,7 +414,8 @@ execute(Req, Env, [Middleware|Tail]) ->
 			erlang:hibernate(?MODULE, resume,
 				[Env, Tail, Module, Function, Args]);
 		{halt, Req2} ->
-			cowboy_req:ensure_response(Req2, 204);
+			{ok, R3} = cowboy_req:ensure_response(Req2, 204),
+            R3;
 		{error, Status, Req2} ->
 			cowboy_req:maybe_reply(Status, Req2)
 	end.
@@ -428,7 +430,8 @@ resume(Env, Tail, Module, Function, Args) ->
 			erlang:hibernate(?MODULE, resume,
 				[Env, Tail, Module2, Function2, Args2]);
 		{halt, Req2} ->
-			cowboy_req:ensure_response(Req2, 204);
+			{ok, R3} = cowboy_req:ensure_response(Req2, 204),
+            R3;
 		{error, Status, Req2} ->
 			cowboy_req:maybe_reply(Status, Req2)
 	end.

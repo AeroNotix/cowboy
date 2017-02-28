@@ -142,8 +142,8 @@ handler_init(State=#state{env=Env, transport=Transport,
 			websocket_handshake(State#state{timeout=Timeout,
 				hibernate=true}, Req2, HandlerState);
 		{shutdown, Req2} ->
-			cowboy_req:ensure_response(Req2, 400),
-			{ok, Req2, [{result, closed}|Env]}
+			{ok, R3} = cowboy_req:ensure_response(Req2, 400),
+			{ok, R3, [{result, closed}|Env]}
 	catch Class:Reason ->
 		cowboy_req:maybe_reply(400, Req),
 		erlang:Class([

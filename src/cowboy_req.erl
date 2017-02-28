@@ -1047,22 +1047,20 @@ maybe_reply(Status, Req) ->
 
 -spec ensure_response(req(), cowboy:http_status()) -> ok.
 %% The response has already been fully sent to the client.
-ensure_response(#http_req{resp_state=done}, _) ->
-	ok;
+ensure_response(#http_req{resp_state=done}=Req, _) ->
+	{ok, Req};
 %% No response has been sent but everything apparently went fine.
 %% Reply with the status code found in the second argument.
 ensure_response(Req=#http_req{resp_state=RespState}, Status)
 		when RespState =:= waiting; RespState =:= waiting_stream ->
-	_ = reply(Status, [], [], Req),
-	ok;
+	reply(Status, [], [], Req);
 %% Terminate the chunked body for HTTP/1.1 only.
-ensure_response(#http_req{method= <<"HEAD">>}, _) ->
-	ok;
+ensure_response(#http_req{method= <<"HEAD">>}=Req, _) ->
+	{ok, Req};
 ensure_response(Req=#http_req{resp_state=chunks}, _) ->
-	_ = last_chunk(Req),
-	ok;
-ensure_response(#http_req{}, _) ->
-	ok.
+    {ok, last_chunk(Req)};
+ensure_response(#http_req{}=Req, _) ->
+	{ok, Req}.
 
 %% Private setter/getter API.
 
